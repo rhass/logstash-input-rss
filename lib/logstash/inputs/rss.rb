@@ -79,17 +79,18 @@ class LogStash::Inputs::Rss < LogStash::Inputs::Base
             queue << event
           end
         when 'atom'
-          if ! item.content.nil?
-            content = item.content.content
+          if ! item.id.content.nil?
+            content = item.id.content
           else
-            content = item.summary.content
+            content = item.id.summary.content
           end
           @codec.decode(content) do |event|
             event["Feed"] = @url
-            event["updated"] = item.updated.content
+            event["updated"] = item.updated.content unless item.updated.content.nil?
             event["title"] = item.title.content
             event["link"] = item.link.href
-            event["author"] = item.author.name.content
+            # Use the parent value if the entry value is empty.
+            event["author"] = item.author.nil? ? item.parent.author.name.content : item.author.name.content
             unless item.published.nil?
               event["published"] = item.published.content
             end
